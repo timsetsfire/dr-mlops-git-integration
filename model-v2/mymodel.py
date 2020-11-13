@@ -10,6 +10,7 @@ import lightgbm as lgb
 from joblib import load
 import yaml
 import numpy as np
+import shap
 
 class MyModel(object):
     def __init__(self, code_dir):
@@ -31,6 +32,8 @@ class MyModel(object):
             self.numeric_features = self.feature_detail["Numeric"]
             self.categorical_features = self.feature_detail["Categorical"]
             self.offset = self.feature_detail["Offset"]
+        self.explainer = shap.TreeExplainer(self.model)
+        self.shap_headers = ["SHAP_{}".format(i) for i in self.numeric_features + self.categorical_features]
 
     def preprocess_features(self, X):
         offset = X[self.offset].values
@@ -41,6 +44,13 @@ class MyModel(object):
         x_cat = self.oe.transform(x_cat)
         x = np.concatenate([x_cat, x_num], axis=1)
         return (x, offset)
+
+    def explain(self, X):
+        X_t = self.preprocess_features(X)[0]
+        shap_values = self.explainer.shap_values( X_t )
+        return pd.DataFrame(shap_values, columns = self.shap_headers).to_dict(orient="records")
+
+
 
     def predict(
         self, X, positive_class_label=None, negative_class_label=None, **kwargs

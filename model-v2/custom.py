@@ -11,8 +11,19 @@ import lightgbm as lgb
 from joblib import load
 import yaml
 import numpy as np
+import io
+import avro.io
+import avro
+from avro.datafile import DataFileReader
 
 from mymodel import MyModel
+
+import shap
+import io
+from io import BytesIO
+import avro.io
+import avro
+from avro.datafile import DataFileReader, DataFileWriter
 
 #
 #"""
@@ -98,44 +109,27 @@ def score(data, model, **kwargs):
    """
 
    return model.predict(data)
-#
-#
-#def post_process(predictions, model):
-#    """
-#    This hook can be implemented to adjust logic in the scoring mode.
-#
-#    This method should return predictions as a dataframe with the following format:
-#
-#    Binary Classification:
-#    Must have columns for each class label with floating- point class probabilities as values.
-#        Each row should sum to 1.0
-#
-#    Regression:
-#    Must have a single column called `Predictions` with numerical values
-#
-#    This method is only needed if your model's output does not match the above expectations
-#
-#    :param predictions: is the dataframe of predictions produced by `cmrun` or by the
-#        `score` hook, if supplied
-#    :param model: the deserialized model loaded by `cmrun` or by `load_model`, if supplied
-#    :returns: dataframe with the results to return
-#    """
-#    return predictions
-#
-#def fit(X, y, output_dir, **kwargs):
-#
-#    """
-#    This hook must be implemented with your fitting code, for running drum in the fit mode.
-#
-#    Parameters
-#    ----------
-#    :param X: pd.DataFrame - training data to perform fit on
-#    :param y: pd.Series - target data to perform fit on
-#    :param output_dir: str - the path to write output. This is the path provided in '--output' parameter of the 'drum fit' command.
-#    :param kwargs: Dict[str, Any] - additional optional keyword arguments to the function:
-#        - 'class_order': [List[str] - a two element long list dictating the order of classes which should be used for modeling
-#        - 'row_weights': np.ndarray - an array of non-negative numeric values which can be used to dictate how important a row is
-#
-#    :returns: nothing
-#    """
-#    return None
+
+def score_unstructured(model, data, query, **kwargs):
+   print("Incoming content type params: ", kwargs)
+   print("Incoming data type: ", type(data))
+   print("Incoming query params: ", query)
+
+   schema_path = "/Users/timothy.whittaker/Desktop/git/dr-mlops-git-integration/model-v2/schema.avsc"
+   schema = avro.schema.parse(open(schema_path, "rb").read())
+   # writer = avro.io.DatumWriter(schema)
+   # bytes_writer = BytesIO()
+   # encoder = avro.io.BinaryEncoder(bytes_writer)
+   X = pd.read_csv(BytesIO(data))
+   shap_values_dict = model.explain(X)
+   predictions = model.predict(X).values
+   # for p, s in zip(predictions, shap_values_dict):
+   #    writer.write({"prediction": p[0],"shap_values": s}, encoder)
+   stream = io.BufferedWriter(io.BytesIO())
+   writer = DataFileWriter(stream, avro.io.DatumWriter(), schema)
+   for p, s in zip(predictions, shap_values_dict):
+      writer.append({"prediction": p[0],"shap_values": s})
+      writer.flush()
+   ret_bytes = stream.raw.getvalue()
+   writer.close()
+   return ret_bytes
