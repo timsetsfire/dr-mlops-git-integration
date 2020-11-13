@@ -1,9 +1,7 @@
 import pickle
 from typing import List, Optional, Any, Dict
-
 import numpy as np
 import pandas as pd
-
 from category_encoders import OrdinalEncoder
 from sklearn.impute import SimpleImputer
 import lightgbm as lgb
@@ -16,16 +14,16 @@ class MyModel(object):
     def __init__(self, code_dir):
         """Load the model pickle file."""
         # This supports both Python 2 and 3
-        with open( code_dir + "/lgbm.joblib", "rb") as picklefile:
+        with open( code_dir + "/artifacts/lgbm.joblib", "rb") as picklefile:
             try:
                 self.model = load(picklefile, encoding="latin1")
             except TypeError:
                 self.model = load(picklefile)
-        with open(code_dir + "/ordinalEncoder.joblib", "rb") as f:
+        with open(code_dir + "/artifacts/ordinalEncoder.joblib", "rb") as f:
             self.oe = load(f)
-        with open(code_dir + "/simpleImputerNum.joblib", "rb") as f:
+        with open(code_dir + "/artifacts/simpleImputerNum.joblib", "rb") as f:
             self.siNum = load(f)
-        with open(code_dir + "/simpleImputerCat.joblib", "rb") as f:
+        with open(code_dir + "/artifacts/simpleImputerCat.joblib", "rb") as f:
             self.siCat = load(f)
         with open(code_dir + "/feature_detail.yaml", "r") as f:
             self.feature_detail = yaml.load(f, Loader=yaml.FullLoader)
