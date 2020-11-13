@@ -115,8 +115,7 @@ def score_unstructured(model, data, query, **kwargs):
    print("Incoming data type: ", type(data))
    print("Incoming query params: ", query)
 
-   schema_path = "/Users/timothy.whittaker/Desktop/git/dr-mlops-git-integration/model-v2/schema.avsc"
-   schema = avro.schema.parse(open(schema_path, "rb").read())
+
    # writer = avro.io.DatumWriter(schema)
    # bytes_writer = BytesIO()
    # encoder = avro.io.BinaryEncoder(bytes_writer)
@@ -126,7 +125,7 @@ def score_unstructured(model, data, query, **kwargs):
    # for p, s in zip(predictions, shap_values_dict):
    #    writer.write({"prediction": p[0],"shap_values": s}, encoder)
    stream = io.BufferedWriter(io.BytesIO())
-   writer = DataFileWriter(stream, avro.io.DatumWriter(), schema)
+   writer = DataFileWriter(stream, avro.io.DatumWriter(), model.schema)
    for p, s in zip(predictions, shap_values_dict):
       writer.append({"prediction": p[0],"shap_values": s})
       writer.flush()

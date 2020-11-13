@@ -9,6 +9,8 @@ from joblib import load
 import yaml
 import numpy as np
 import shap
+import avro
+import os
 
 class MyModel(object):
     def __init__(self, code_dir):
@@ -32,6 +34,8 @@ class MyModel(object):
             self.offset = self.feature_detail["Offset"]
         self.explainer = shap.TreeExplainer(self.model)
         self.shap_headers = ["SHAP_{}".format(i) for i in self.numeric_features + self.categorical_features]
+        schema_path = os.path.join(code_dir, "schema.avsc")
+        self.schema = avro.schema.parse(open(schema_path, "rb").read())
 
     def preprocess_features(self, X):
         offset = X[self.offset].values
