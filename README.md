@@ -18,8 +18,8 @@ drum server --code-dir ./model-v2 --input ./extras/test_data/test_data.csv --tar
 
 ```
 pip install -U datarobot-drum
-pip install -r ./model-v2/requirements.txt
-drum score --code-dir ./imdb_gin --input ./data/imdb-graph.avro --target-type unstructured --content-type application/octet-stream
+pip install -r ./imdb-gin/requirements.txt
+drum score --code-dir ./imdb-gin --input ./data/imdb-graph.avro --target-type unstructured --content-type application/octet-stream
 ```
 
 See the Unstructured Model Predict
